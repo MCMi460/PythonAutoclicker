@@ -6,7 +6,7 @@
 ---
 ## How to use
 
-[Download][download]
+### [Download][download]
 
 Step 1:
 
