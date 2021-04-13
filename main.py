@@ -3,6 +3,7 @@ from pynput import keyboard
 from pynput.mouse import Button, Controller
 import threading
 import time
+import sys
 
 window = Tk.Tk()
 window.title("Autoclicker v0.1")
@@ -11,6 +12,7 @@ window.resizable(False,False)
 
 mouse = Controller()
 runclicker = False
+window_closed = False
 
 my_frame = Tk.Frame(window, width=800, height=400)
 my_frame.pack()
@@ -114,6 +116,8 @@ class Background(threading.Thread):
                 time.sleep(0.001)
                 mouse.release(Button.left)
                 time.sleep(data)
+            if window_closed:
+                break
 
 task = Background()
 task.start()
@@ -139,3 +143,4 @@ listener = keyboard.Listener(on_press=on_press, on_release=on_release)
 
 listener.start()
 window.mainloop()
+window_closed = True
