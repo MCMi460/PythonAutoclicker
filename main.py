@@ -17,6 +17,10 @@ window_closed = False
 my_frame = Tk.Frame(window, width=800, height=400)
 my_frame.pack()
 
+category = Tk.Label(my_frame,text="Click Interval")
+category.config(font=("Helvetica",15))
+category.place(x=0,y=20,width=100,height=20)
+
 S = Tk.Text(my_frame,height=1,width=4)
 S.insert("1.0", "0")
 S.place(x=30,y=50)
