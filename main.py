@@ -3,37 +3,40 @@ from pynput import keyboard
 from pynput.mouse import Button, Controller
 import threading
 import time
-import sys
+import math
 
 window = Tk.Tk()
-window.title("Autoclicker v0.1")
+window.title("Autoclicker v0.2")
 window.geometry("800x400")
 window.resizable(False,False)
 
 mouse = Controller()
 runclicker = False
+holdclicker = False
 window_closed = False
+buttonvar = Button.left
+click = True
 
-my_frame = Tk.Frame(window, width=800, height=400)
-my_frame.pack()
+frame = Tk.Frame(window, width=800, height=400)
+frame.pack()
 
-category = Tk.Label(my_frame,text="Click Interval")
+category = Tk.Label(frame,text="Click Interval")
 category.config(font=("Helvetica",15))
 category.place(x=0,y=20,width=100,height=20)
 
-S = Tk.Text(my_frame,height=1,width=4)
+S = Tk.Text(frame,height=1,width=4)
 S.insert("1.0", "0")
 S.place(x=30,y=50)
 
-seconds = Tk.Label(my_frame,text="Seconds")
+seconds = Tk.Label(frame,text="Seconds")
 seconds.config(font=("Helvetica",10))
 seconds.place(x=60,y=50,width=50,height=20)
 
-MS = Tk.Text(my_frame,height=1,width=4)
+MS = Tk.Text(frame,height=1,width=4)
 MS.insert("1.0", "1")
 MS.place(x=120,y=50)
 
-milseconds = Tk.Label(my_frame,text="Milliseconds")
+milseconds = Tk.Label(frame,text="Milliseconds")
 milseconds.config(font=("Helvetica",10))
 milseconds.place(x=160,y=50,width=60,height=20)
 
@@ -80,28 +83,52 @@ def Update():
         return
     global data
     if msdata > 0 and sdata > 0:
-        notice.config(text=f"S: {sdata}, MS: {msdata}")
+        notice.config(text=f"{sdata}s, {msdata}ms")
         data = sdata + msdata / 1000
     elif msdata > 0:
-        notice.config(text=f"MS: {msdata}")
+        notice.config(text=f"{msdata}ms")
         data = msdata / 1000
     elif sdata > 0:
-        notice.config(text=f"S: {sdata}")
+        notice.config(text=f"{sdata}s")
         data = sdata
-    print("Updated")
+    global buttonvar
+    if buttontype.get() == "Left Click":
+        buttonvar = Button.left
+    elif buttontype.get() == "Right Click":
+        buttonvar = Button.right
+    global click
+    if clickertype.get() == "Click":
+        click = True
+    elif clickertype.get() == "Hold":
+        click = False
+    print(f"Updated to {sdata}s, {msdata}ms, {buttontype.get()}, {clickertype.get()}")
 
-setbutton = Tk.Button(my_frame,text="Update",font=("Helvetica",12),command=Update)
+setbutton = Tk.Button(frame,text="Update",font=("Helvetica",12),command=Update)
 setbutton.place(x=220,y=50,width=60,height=20)
 
-notice = Tk.Label(my_frame,text="Press F6 to start")
+buttontype = Tk.StringVar(frame)
+buttontype.set("Left Click")
+
+buttonmenu = Tk.OptionMenu(frame, buttontype, "Left Click", "Right Click")
+buttonmenu.config(font=("Helvetica",12))
+buttonmenu.place(x=280,y=50,width=70,height=20)
+
+clickertype = Tk.StringVar(frame)
+clickertype.set("Click")
+
+clickermenu = Tk.OptionMenu(frame, clickertype, "Click", "Hold")
+clickermenu.config(font=("Helvetica",12))
+clickermenu.place(x=350,y=50,width=70,height=20)
+
+notice = Tk.Label(frame,text="Press F6 to start")
 notice.config(font=("Helvetica",20))
 notice.place(x=0,y=100,width=300,height=30)
 
-title = Tk.Label(my_frame,text="Autoclicker v0.1")
+title = Tk.Label(frame,text="Autoclicker v0.2")
 title.config(font=("Helvetica",20))
 title.place(x=250,y=5,width=300,height=20)
 
-author = Tk.Label(my_frame,text="By Deltaion Lee")
+author = Tk.Label(frame,text="By Deltaion Lee")
 author.config(font=("Helvetica",20))
 author.place(x=250,y=350,width=300,height=50)
 author.bind("<Button-1>", lambda e: print("https://mi460.dev/github"))
@@ -116,22 +143,42 @@ class Background(threading.Thread):
     def run(self,*args,**kwargs):
         while True:
             if runclicker:
-                mouse.press(Button.left)
+                mouse.press(buttonvar)
                 time.sleep(0.001)
-                mouse.release(Button.left)
+                mouse.release(buttonvar)
                 time.sleep(data)
+            global holdclicker
+            if holdclicker:
+                mouse.press(buttonvar)
+                for i in range(math.round(data)):
+                    time.sleep(1)
+                    if not holdclicker:
+                        break
+                mouse.release(buttonvar)
+                holdclicker = False
             if window_closed:
                 break
 
 task = Background()
+task.daemon = True
 task.start()
 
 def execute():
     global runclicker
-    if runclicker:
+    global holdclicker
+    if click == True:
+        if runclicker:
+            runclicker = False
+            holdclicker = False
+        else:
+            runclicker = True
+            holdclicker = False
+    elif click == False:
+        if holdclicker:
+            holdclicker = False
+        else:
+            holdclicker = True
         runclicker = False
-    else:
-        runclicker = True
 
 def on_press(key):
     if any([key in COMBO for COMBO in COMBINATIONS]):
@@ -147,4 +194,6 @@ listener = keyboard.Listener(on_press=on_press, on_release=on_release)
 
 listener.start()
 window.mainloop()
+runclicker = False
+holdclicker = False
 window_closed = True
