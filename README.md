@@ -3,6 +3,8 @@
 
 ![screenshot](/images/screenshot.png?raw=true)
 
+(I am aware that it does not appear as such on Windows, I will begin fixing that soon)
+
 ---
 ## How to use
 
