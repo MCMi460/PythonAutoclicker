@@ -3,7 +3,6 @@ from pynput import keyboard
 from pynput.mouse import Button, Controller
 import threading
 import time
-import math
 
 window = Tk.Tk()
 window.title("Autoclicker v0.2")
@@ -16,6 +15,7 @@ holdclicker = False
 window_closed = False
 buttonvar = Button.left
 click = True
+times = 0
 
 frame = Tk.Frame(window, width=800, height=400)
 frame.pack()
@@ -50,6 +50,7 @@ def Update():
     try:
         sdata = int(temps)
         if len(str(sdata)) > 3:
+            notice.config(text=f"Please only type 3 digits for each interval.",font=("Helvetica",12))
             print("Please only type 3 digits for each interval.")
             return
     except:
@@ -60,12 +61,14 @@ def Update():
                 print("You need something!")
                 return
         else:
-            print("Please only type integers for the seconds interval.")
+            print("Please only type integers for the intervals.")
+            notice.config(text=f"Please only type integers for the intervals.",font=("Helvetica",12))
             return
     try:
         msdata = int(tempms)
         if len(str(msdata)) > 3:
             print("Please only type 3 digits for each interval.")
+            notice.config(text=f"Please only type 3 digits for each interval.",font=("Helvetica",12))
             return
     except:
         if tempms == "":
@@ -75,62 +78,100 @@ def Update():
                 print("You need something!")
                 return
         else:
-            print("Please only type integers for the seconds interval.")
+            print("Please only type integers for the intervals.")
+            notice.config(text=f"Please only type integers for the intervals.",font=("Helvetica",12))
             return
     if msdata == 0 and sdata == 0:
         print("You need something!")
         msdata = 1
         return
-    global data
-    if msdata > 0 and sdata > 0:
-        notice.config(text=f"{sdata}s, {msdata}ms")
-        data = sdata + msdata / 1000
-    elif msdata > 0:
-        notice.config(text=f"{msdata}ms")
-        data = msdata / 1000
-    elif sdata > 0:
-        notice.config(text=f"{sdata}s")
-        data = sdata
     global buttonvar
-    if buttontype.get() == "Left Click":
+    if buttontype.get() == "Left":
         buttonvar = Button.left
-    elif buttontype.get() == "Right Click":
+    elif buttontype.get() == "Right":
         buttonvar = Button.right
     global click
     if clickertype.get() == "Click":
         click = True
     elif clickertype.get() == "Hold":
         click = False
-    print(f"Updated to {sdata}s, {msdata}ms, {buttontype.get()}, {clickertype.get()}")
+    global times
+    times2 = "infinite"
+    if rtype.get() == 1:
+        times = 0
+    elif rtype.get() == 2:
+        try:
+            times = int(rtimes.get("1.0",'end-1c'))
+            if len(str(times)) > 3:
+                print("Please only type 3 digits for the repeat value.")
+                notice.config(text=f"Please only type 3 digits for the repeat value.",font=("Helvetica",12))
+                times = 0
+                return
+            times2 = f"{times}"
+        except:
+            print("Please enter an integer for the repeat value.")
+            notice.config(text=f"Please enter an integer for the repeat value.",font=("Helvetica",12))
+            times = 0
+            return
+    global data
+    if msdata > 0 and sdata > 0:
+        notice.config(text=f"{buttontype.get()} {clickertype.get()} {times2} times, {sdata}s, {msdata}ms",font=("Helvetica",20))
+        data = sdata + msdata / 1000
+    elif msdata > 0:
+        notice.config(text=f"{buttontype.get()} {clickertype.get()} {times2} times, {msdata}ms",font=("Helvetica",20))
+        data = msdata / 1000
+    elif sdata > 0:
+        notice.config(text=f"{buttontype.get()} {clickertype.get()} {times2} times, {sdata}s",font=("Helvetica",20))
+        data = sdata
+    print(f"Updated to {sdata}s, {msdata}ms, {buttontype.get()} {clickertype.get()} {times2} times")
 
 setbutton = Tk.Button(frame,text="Update",font=("Helvetica",12),command=Update)
 setbutton.place(x=220,y=50,width=60,height=20)
 
 buttontype = Tk.StringVar(frame)
-buttontype.set("Left Click")
+buttontype.set("Left")
 
-buttonmenu = Tk.OptionMenu(frame, buttontype, "Left Click", "Right Click")
+buttonmenu = Tk.OptionMenu(frame, buttontype, "Left", "Right")
 buttonmenu.config(font=("Helvetica",12))
-buttonmenu.place(x=280,y=50,width=70,height=20)
+buttonmenu.place(x=280,y=50,width=55,height=20)
 
 clickertype = Tk.StringVar(frame)
 clickertype.set("Click")
 
 clickermenu = Tk.OptionMenu(frame, clickertype, "Click", "Hold")
 clickermenu.config(font=("Helvetica",12))
-clickermenu.place(x=350,y=50,width=70,height=20)
+clickermenu.place(x=335,y=50,width=70,height=20)
+
+rtype = Tk.IntVar(frame)
+rtype.set(1)
+
+repeatmenu = Tk.Radiobutton(frame, text='Repeat until stopped',variable=rtype,value=1)
+repeatmenu.config(font=("Helvetica",12))
+repeatmenu.place(x=500,y=50,width=130,height=20)
+
+repeatmenu2 = Tk.Radiobutton(frame, text='Repeat',variable=rtype,value=2)
+repeatmenu2.config(font=("Helvetica",12))
+repeatmenu2.place(x=500,y=80,width=70,height=20)
+
+rtimes = Tk.Text(frame,height=1,width=3)
+rtimes.insert("1.0", "10")
+rtimes.place(x=563,y=81)
+
+word = Tk.Label(frame,text="times")
+word.config(font=("Helvetica",12))
+word.place(x=590,y=80,width=30,height=20)
 
 notice = Tk.Label(frame,text="Press F6 to start")
 notice.config(font=("Helvetica",20))
-notice.place(x=0,y=100,width=300,height=30)
+notice.place(x=225,y=350,width=350,height=30)
 
 title = Tk.Label(frame,text="Autoclicker v0.2")
 title.config(font=("Helvetica",20))
 title.place(x=250,y=5,width=300,height=20)
 
 author = Tk.Label(frame,text="By Deltaion Lee")
-author.config(font=("Helvetica",20))
-author.place(x=250,y=350,width=300,height=50)
+author.config(font=("Helvetica",12))
+author.place(x=340,y=25,width=120,height=20)
 author.bind("<Button-1>", lambda e: print("https://mi460.dev/github"))
 
 COMBINATIONS = [
@@ -142,22 +183,46 @@ current = set()
 class Background(threading.Thread):
     def run(self,*args,**kwargs):
         while True:
-            if runclicker:
-                mouse.press(buttonvar)
-                time.sleep(0.001)
-                mouse.release(buttonvar)
-                time.sleep(data)
-            global holdclicker
-            if holdclicker:
-                mouse.press(buttonvar)
-                for i in range(math.round(data)):
-                    time.sleep(1)
-                    if not holdclicker:
-                        break
-                mouse.release(buttonvar)
-                holdclicker = False
             if window_closed:
                 break
+            global runclicker
+            global holdclicker
+            if times == 0:
+                if runclicker:
+                    mouse.press(buttonvar)
+                    time.sleep(0.001)
+                    mouse.release(buttonvar)
+                    time.sleep(data)
+                if holdclicker:
+                    mouse.press(buttonvar)
+                    for i in range(round(data)):
+                        time.sleep(1)
+                        if not holdclicker:
+                            break
+                    mouse.release(buttonvar)
+                    time.sleep(0.5)
+            else:
+                if runclicker:
+                    for i in range(times):
+                        if not runclicker:
+                            break
+                        mouse.press(buttonvar)
+                        time.sleep(0.001)
+                        mouse.release(buttonvar)
+                        time.sleep(data)
+                    runclicker = False
+                if holdclicker:
+                    for i in range(times):
+                        if not holdclicker:
+                            break
+                        mouse.press(buttonvar)
+                        for i in range(round(data)):
+                            time.sleep(1)
+                            if not holdclicker:
+                                break
+                        mouse.release(buttonvar)
+                        time.sleep(0.5)
+                    holdclicker = False
 
 task = Background()
 task.daemon = True
@@ -169,10 +234,9 @@ def execute():
     if click == True:
         if runclicker:
             runclicker = False
-            holdclicker = False
         else:
             runclicker = True
-            holdclicker = False
+        holdclicker = False
     elif click == False:
         if holdclicker:
             holdclicker = False
