@@ -1,11 +1,13 @@
 import tkinter as Tk
 from pynput import keyboard
-from pynput.mouse import Button, Controller
+from pynput.mouse import Button, Controller, Listener
 import threading
 import time
 
+version = 0.3
+
 window = Tk.Tk()
-window.title("Autoclicker v0.3")
+window.title(f"Autoclicker v{version}")
 window.geometry("800x400")
 window.resizable(False,False)
 
@@ -17,6 +19,9 @@ buttonvar = Button.left
 click = True
 times = 0
 keygrab = False
+x = 0
+y = 0
+getpos = False
 
 frame = Tk.Frame(window, width=800, height=400)
 frame.pack()
@@ -166,7 +171,7 @@ notice = Tk.Label(frame,text="Press F6 to start")
 notice.config(font=("Helvetica",20))
 notice.place(x=225,y=350,width=350,height=30)
 
-title = Tk.Label(frame,text="Autoclicker v0.3")
+title = Tk.Label(frame,text=f"Autoclicker v{version}")
 title.config(font=("Helvetica",20))
 title.place(x=250,y=5,width=300,height=20)
 
@@ -174,6 +179,29 @@ author = Tk.Label(frame,text="By Deltaion Lee")
 author.config(font=("Helvetica",12))
 author.place(x=340,y=25,width=120,height=20)
 author.bind("<Button-1>", lambda e: print("https://mi460.dev/github"))
+
+def getcoords():
+    global getpos
+    getpos = True
+    time.sleep(0.5)
+    getpos = True
+    while True:
+        if window_closed or not getpos:
+            break
+
+coords = Tk.Button(frame,text="Choose Cursor Location",font=("Helvetica",12),command=getcoords)
+coords.place(x=500,y=170,width=150,height=20)
+
+postype = Tk.IntVar(frame)
+postype.set(1)
+
+pos1 = Tk.Radiobutton(frame, text='Current Location',variable=postype,value=1)
+pos1.config(font=("Helvetica",12))
+pos1.place(x=500,y=120,width=130,height=20)
+
+pos2 = Tk.Radiobutton(frame, text='Pick location',variable=postype,value=2)
+pos2.config(font=("Helvetica",12))
+pos2.place(x=500,y=150,width=120,height=20)
 
 COMBINATIONS = [
     {keyboard.Key.f6}
@@ -188,6 +216,9 @@ class Background(threading.Thread):
                 break
             global runclicker
             global holdclicker
+            if runclicker == True or holdclicker == True:
+                if postype.get() == 2:
+                    mouse.position = (x, y)
             if times == 0:
                 if runclicker:
                     mouse.press(buttonvar)
@@ -197,6 +228,8 @@ class Background(threading.Thread):
                 if holdclicker:
                     mouse.press(buttonvar)
                     for i in range(round(data)):
+                        if postype.get() == 2:
+                            mouse.position = (x, y)
                         time.sleep(1)
                         if not holdclicker:
                             break
@@ -207,6 +240,8 @@ class Background(threading.Thread):
                     for i in range(times):
                         if not runclicker:
                             break
+                        if postype.get() == 2:
+                            mouse.position = (x, y)
                         mouse.press(buttonvar)
                         time.sleep(0.001)
                         mouse.release(buttonvar)
@@ -218,6 +253,8 @@ class Background(threading.Thread):
                             break
                         mouse.press(buttonvar)
                         for i in range(round(data)):
+                            if postype.get() == 2:
+                                mouse.position = (x, y)
                             time.sleep(1)
                             if not holdclicker:
                                 break
@@ -240,7 +277,7 @@ def remap():
     notice.config(text=f"Press {keyname} to start")
 
 remapbutton = Tk.Button(frame,text="Activate Key: F6",font=("Helvetica",12),command=remap)
-remapbutton.place(x=35,y=100,width=130,height=20)
+remapbutton.place(x=500,y=200,width=130,height=20)
 
 def execute():
     global runclicker
@@ -274,9 +311,20 @@ def on_release(key):
         COMBINATIONS.append({key})
         keygrab = False
 
+def on_click(x_,y_,button,pressed):
+    global getpos
+    if getpos:
+        global x
+        global y
+        x = x_
+        y = y_
+        getpos = False
+
 listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+mouselistener = Listener(on_click=on_click)
 
 listener.start()
+mouselistener.start()
 window.mainloop()
 runclicker = False
 holdclicker = False
