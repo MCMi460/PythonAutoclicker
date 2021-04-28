@@ -5,7 +5,7 @@ import threading
 import time
 
 window = Tk.Tk()
-window.title("Autoclicker v0.2")
+window.title("Autoclicker v0.3")
 window.geometry("800x400")
 window.resizable(False,False)
 
@@ -16,6 +16,7 @@ window_closed = False
 buttonvar = Button.left
 click = True
 times = 0
+keygrab = False
 
 frame = Tk.Frame(window, width=800, height=400)
 frame.pack()
@@ -165,7 +166,7 @@ notice = Tk.Label(frame,text="Press F6 to start")
 notice.config(font=("Helvetica",20))
 notice.place(x=225,y=350,width=350,height=30)
 
-title = Tk.Label(frame,text="Autoclicker v0.2")
+title = Tk.Label(frame,text="Autoclicker v0.3")
 title.config(font=("Helvetica",20))
 title.place(x=250,y=5,width=300,height=20)
 
@@ -228,6 +229,19 @@ task = Background()
 task.daemon = True
 task.start()
 
+def remap():
+    global keygrab
+    keygrab = True
+    while True:
+        if not keygrab or window_closed:
+            break
+    keyname = str(COMBINATIONS[0]).split(":")[0].replace("{<Key.","").capitalize()
+    remapbutton.config(text=f"Activate Key: {keyname}")
+    notice.config(text=f"Press {keyname} to start")
+
+remapbutton = Tk.Button(frame,text="Activate Key: F6",font=("Helvetica",12),command=remap)
+remapbutton.place(x=35,y=100,width=130,height=20)
+
 def execute():
     global runclicker
     global holdclicker
@@ -251,8 +265,14 @@ def on_press(key):
             execute()
 
 def on_release(key):
+    global keygrab
+    global COMBINATIONS
     if any([key in COMBO for COMBO in COMBINATIONS]):
         current.remove(key)
+    elif keygrab:
+        COMBINATIONS = []
+        COMBINATIONS.append({key})
+        keygrab = False
 
 listener = keyboard.Listener(on_press=on_press, on_release=on_release)
 
